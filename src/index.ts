@@ -3,7 +3,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import cors from "cors"
 import { config } from "dotenv";
-import { getBlogByName, getBlogList } from "./tools/blogs";
+import { getAbout, getBlogByName, getBlogList } from "./tools/blogs";
 import { z } from "zod";
 import { networkInterfaces } from "os";
 import { getLocalIP } from "./utils";
@@ -53,6 +53,22 @@ server.tool(
         {
           type: "text",
           text: JSON.stringify(await getBlogByName(name))
+        }
+      ]
+    }
+  }
+)
+
+server.tool(
+  "about_me",
+  "give you something of this website's master",
+  {},
+  async () => {
+    return {
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify(await getAbout())
         }
       ]
     }

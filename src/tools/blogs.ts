@@ -19,3 +19,7 @@ export const getBlogByName = async (name: string) => {
     })
     return blog
 }
+
+export const getAbout = async () => {
+    return await getBlogByName("about");
+}
