@@ -5,6 +5,8 @@ import cors from "cors"
 import { config } from "dotenv";
 import { getBlogByName, getBlogList } from "./tools/blogs";
 import { z } from "zod";
+import { networkInterfaces } from "os";
+import { getLocalIP } from "./utils";
 
 config()
 
@@ -111,4 +113,7 @@ app.delete('/mcp', async (req: Request, res: Response) => {
   }));
 });
 
-app.listen(4000);
+app.listen(4000, () => {
+  const ip = getLocalIP()
+  console.log(`Server is running on http://${ip}:4000`);
+});
