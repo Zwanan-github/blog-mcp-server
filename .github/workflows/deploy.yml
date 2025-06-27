@@ -1,0 +1,73 @@
+name: Zwanan blog MCP Server
+
+on:
+  push:
+    branches:
+      - main # 当推送到 main 分支时触发
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest # 使用最新的 Ubuntu Runner
+    environment: production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4 # 检出代码
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # 指定Node.js版本，与服务器保持一致或更高
+
+      - name: Install dependencies
+        run: npm install -g pnpm; pnpm i # 使用 npm ci 确保安装精确的依赖版本
+
+      - name: Build Next.js application
+        run: pnpm build # 构建 Next.js 应用
+
+      - name: Create .env.production file (if needed)
+        # 如果你的Next.js应用在生产环境需要特定的环境变量，可以在这里创建
+        # 注意：敏感信息不应直接写在这里，应通过GitHub Secrets传递
+        run: |
+          echo "NODE_ENV=production" > .env.production
+          echo "CORS_ORIGIN_URL=${{ vars.CORS_ORIGIN_URL }}" >> .env.production
+          # ... 其他生产环境变量
+
+      - name: Deploy to server via SCP
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22 # 默认SSH端口，如果不同请修改
+          source: "package.json,pnpm-lock.yaml,tsconfig.json,.env.production, build/" # 需要传输的文件和目录
+          target: ${{ secrets.DEPLOY_PATH }} 
+          
+      - name: Run deployment commands on server via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            source ~/.zshrc
+            
+            cd ${{ secrets.DEPLOY_PATH }}
+
+            echo "Installing production dependencies..."
+            pnpm install --production # 只安装生产依赖，节省空间和时间
+
+            echo "Stopping existing PM2 process..."
+            # 停止并删除旧的PM2进程，如果不存在则忽略错误
+            pm2 stop ${{ secrets.NEXT_PUBLIC_APP_NAME }} || true
+            pm2 delete ${{ secrets.NEXT_PUBLIC_APP_NAME }} || true
+
+            echo "Starting new PM2 process..."
+            # 确保你的 package.json 中有 "dev"
+            pm2 start pnpm --name ${{ secrets.NEXT_PUBLIC_APP_NAME }} -- dev
+
+            echo "Saving PM2 configuration..."
+            pm2 save
+
+            echo "Deployment complete!"
