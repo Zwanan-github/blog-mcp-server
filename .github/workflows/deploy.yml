@@ -40,7 +40,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22 # 默认SSH端口，如果不同请修改
-          source: "package.json,pnpm-lock.yaml,tsconfig.json,.env.production, build/" # 需要传输的文件和目录
+          source: "package.json,pnpm-lock.yaml,.env.production, build/" # 需要传输的文件和目录
           target: ${{ secrets.DEPLOY_PATH }} 
           
       - name: Run deployment commands on server via SSH
