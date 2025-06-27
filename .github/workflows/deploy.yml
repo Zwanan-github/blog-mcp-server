@@ -64,8 +64,8 @@ jobs:
             pm2 delete ${{ secrets.NEXT_PUBLIC_APP_NAME }} || true
 
             echo "Starting new PM2 process..."
-            # 确保你的 package.json 中有 "dev"
-            pm2 start pnpm --name ${{ secrets.NEXT_PUBLIC_APP_NAME }} -- dev
+            # 确保你的 package.json 中有 "start"
+            pm2 start pnpm --name ${{ secrets.NEXT_PUBLIC_APP_NAME }} -- start
 
             echo "Saving PM2 configuration..."
             pm2 save
